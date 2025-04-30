@@ -1,0 +1,226 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+    <link rel="stylesheet" href="./style.css"> 
+    <title>remainders and dadlines</title>
+    <style>
+            body {
+              font-family: Arial, sans-serif;
+              text-align: center;
+            }
+            .calendar {
+              width: 350px;
+              margin: 20px auto;
+              border: 1px solid #ccc;
+              box-shadow: 0 0 10px #ccc;
+              border-radius: 8px;
+            }
+            .calendar-header {
+              background: #007BFF;
+              color: white;
+              padding: 10px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-top-left-radius: 8px;
+              border-top-right-radius: 8px;
+            }
+            .calendar-header button {
+              background: white;
+              color: #007BFF;
+              border: none;
+              padding: 5px 10px;
+              cursor: pointer;
+              font-weight: bold;
+            }
+            .days {
+              display: grid;
+              grid-template-columns: repeat(7, 1fr);
+            }
+            .day, .date {
+              padding: 10px;
+              border: 1px solid #ddd;
+            }
+            .date {
+              cursor: pointer;
+              position: relative;
+            }
+            .today {
+              background: #007BFF;
+              color: white;
+              border-radius: 50%;
+              width: 25px;
+              height: 25px;
+              margin: auto;
+            }
+            .reminder-dot {
+              width: 6px;
+              height: 6px;
+              background: red;
+              border-radius: 50%;
+              position: absolute;
+              bottom: 5px;
+              right: 5px;
+            }
+            /* Modal */
+            .modal {
+              display: none;
+              position: fixed;
+              top: 20%;
+              left: 50%;
+              transform: translateX(-50%);
+              background: white;
+              padding: 20px;
+              border: 1px solid #ccc;
+              box-shadow: 0 0 10px #666;
+              z-index: 1000;
+              border-radius: 8px;
+            }
+            .modal input, .modal textarea {
+              width: 100%;
+              margin-bottom: 10px;
+            }
+            .overlay {
+              display: none;
+              position: fixed;
+              top: 0; left: 0;
+              width: 100%; height: 100%;
+              background: rgba(0,0,0,0.5);
+              z-index: 999;
+            }
+          </style>
+    
+</head> 
+<body> 
+    <div class="wrapper"> 
+        <div class="container"> 
+            <header> 
+                <table width="100%" align="center" cellpadding="0" cellspacing="2"> 
+                <tr> 
+                <th width="20%"><img src="fbs.png" alt="FBS LOGO"  width="130"  
+                       height="100"/></th> 
+                <th colspan=4> 
+                <h1 style="color:white;">STUDENTGO  WEBSITES  
+                    </h1> 
+                </th> 
+                </tr> 
+                </table> 
+            </header> 
+            <nav> 
+                <table width="100%" align="center" cellpadding="0" cellspacing="2"> 
+                <tbody align="center"  style="font-weight:bold;font-size:18px;""> 
+                <tr> 
+                <td width="20%"><hr><a href="index.html">Home</a><hr></td> 
+                <td width="20%"><hr><a href="login.html">Login</a><hr></td> 
+                <td width="20%"><hr><a href="registration.html">Registration</a><hr>  
+                        </td> 
+                <td width="20%"><hr><a href="cart.html" >Remainder and deadlines</a><hr></td> 
+                </tr> 
+                </tbody> 
+                </table> 
+            </nav> 
+        </div> 
+        <body>
+        
+        <div class="calendar">
+          <div class="calendar-header">
+            <button onclick="changeMonth(-1)">&lt;</button>
+            <div id="month-year"></div>
+            <button onclick="changeMonth(1)">&gt;</button>
+          </div>
+          <div class="days">
+            <div class="day">Sun</div><div class="day">Mon</div><div class="day">Tue</div>
+            <div class="day">Wed</div><div class="day">Thu</div><div class="day">Fri</div><div class="day">Sat</div>
+          </div>
+          <div id="dates" class="days"></div>
+        </div>
+        
+        <!-- Modal -->
+        <div class="overlay" id="overlay" onclick="closeModal()"></div>
+        <div class="modal" id="reminderModal">
+          <h3 id="modal-date"></h3>
+          <textarea id="reminderText" rows="4" placeholder="Enter reminder..."></textarea>
+          <button onclick="saveReminder()">Save</button>
+          <div id="existingReminder" style="margin-top: 10px; color: green;"></div>
+        </div>
+        
+        <script>
+          const monthYear = document.getElementById('month-year');
+          const dates = document.getElementById('dates');
+          const today = new Date();
+          let currentMonth = today.getMonth();
+          let currentYear = today.getFullYear();
+          let selectedDate = null;
+        
+          function renderCalendar(month, year) {
+            const firstDay = new Date(year, month).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+            monthYear.textContent = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+            dates.innerHTML = '';
+        
+            for (let i = 0; i < firstDay; i++) {
+              dates.innerHTML += '<div class="date"></div>';
+            }
+        
+            for (let day = 1; day <= lastDate; day++) {
+              const dateKey = `${year}-${month + 1}-${day}`;
+              const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+              const reminder = localStorage.getItem(dateKey);
+        
+              dates.innerHTML += `
+                <div class="date" onclick="openReminder('${dateKey}')">
+                  ${isToday ? `<div class="today">${day}</div>` : day}
+                  ${reminder ? '<div class="reminder-dot"></div>' : ''}
+                </div>
+              `;
+            }
+          }
+        
+          function changeMonth(offset) {
+            currentMonth += offset;
+            if (currentMonth > 11) {
+              currentMonth = 0;
+              currentYear++;
+            } else if (currentMonth < 0) {
+              currentMonth = 11;
+              currentYear--;
+            }
+            renderCalendar(currentMonth, currentYear);
+          }
+        
+          function openReminder(dateStr) {
+            selectedDate = dateStr;
+            const modal = document.getElementById('reminderModal');
+            const overlay = document.getElementById('overlay');
+            const text = localStorage.getItem(dateStr);
+        
+            document.getElementById('modal-date').innerText = `Reminder for ${dateStr}`;
+            document.getElementById('reminderText').value = text || '';
+            document.getElementById('existingReminder').innerText = text ? `Saved: ${text}` : '';
+            
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+          }
+        
+          function closeModal() {
+            document.getElementById('reminderModal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+          }
+        
+          function saveReminder() {
+            const text = document.getElementById('reminderText').value.trim();
+            if (text) {
+              localStorage.setItem(selectedDate, text);
+            } else {
+              localStorage.removeItem(selectedDate);
+            }
+            closeModal();
+            renderCalendar(currentMonth, currentYear);
+          }
+        
+          renderCalendar(currentMonth, currentYear);
+        </script>
+        
+        </body>
+        </html>
+        
